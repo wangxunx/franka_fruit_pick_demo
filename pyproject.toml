@@ -24,6 +24,11 @@ dependencies = [
 [project.optional-dependencies]
 # Policy training + closed-loop evaluation (M5). Install torch from the official index for
 # your CUDA / ROCm / CPU build (see README) -- do not rely on the default wheel here.
+# NOTE: lerobot 0.6.0 split its install into feature-scoped extras; this demo needs
+# `lerobot[training,smolvla]` ([training] -> [dataset] = datasets/av/pyarrow/torchcodec +
+# wandb + accelerate; [smolvla] -> transformers/num2words; ACT needs no extra). The actual
+# install is done explicitly in the README/Dockerfile (`uv pip install "lerobot[training,smolvla]==0.6.0"`),
+# not via `uv sync`, so this marker stays unpinned to keep the lockfile stable.
 learn = [
     "torch",
     "lerobot",

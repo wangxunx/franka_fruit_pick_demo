@@ -2,7 +2,7 @@
 
 Runs the M2-randomized scene with the scripted banana pick-and-place, captures
 (observation.state, action, camera images) per timestep, and writes only the
-*successful* episodes into a LeRobotDataset (lerobot 0.4.x API).
+*successful* episodes into a LeRobotDataset (lerobot 0.6.x API).
 
 Defaults (per project decision):
   - action space : 9-D joint positions (7 arm + 2 gripper), the commanded targets
@@ -38,6 +38,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 import genesis as gs
+from lerobot.configs.video import RGBEncoderConfig
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 
 from build_scene import SceneDomainRandomizationConfig, build_scene
@@ -311,7 +312,7 @@ def main() -> None:
         root=root,
         robot_type="franka",
         use_videos=True,
-        vcodec=args.vcodec,
+        rgb_encoder=RGBEncoderConfig(vcodec=args.vcodec),
     )
 
     # Randomize object poses each episode. The pick object is sampled here (not by the

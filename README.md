@@ -66,7 +66,7 @@ uv pip install \
     torchaudio-2.9.0+rocm7.2.1.gite3c6ee2b-cp312-cp312-linux_x86_64.whl \
     triton-3.5.1+rocm7.2.1.gita272dfa8-cp312-cp312-linux_x86_64.whl
 
-uv pip install "lerobot[smolvla]==0.4.4"
+uv pip install "lerobot[training,smolvla]==0.6.0"
 
 # 3. Verify assets are in place (M1)
 uv run python franka_fruit_pick/setup_assets.py

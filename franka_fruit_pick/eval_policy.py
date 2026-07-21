@@ -53,11 +53,11 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 import genesis as gs
+from lerobot.common.control_utils import predict_action
 from lerobot.configs.policies import PreTrainedConfig
 from lerobot.datasets.lerobot_dataset import LeRobotDatasetMetadata
 from lerobot.policies.factory import make_policy, make_pre_post_processors
-from lerobot.utils.control_utils import predict_action
-from lerobot.utils.utils import get_safe_torch_device
+from lerobot.utils.device_utils import get_safe_torch_device
 
 from build_scene import build_scene
 from grasp_demo import TaskSpec, check_success
