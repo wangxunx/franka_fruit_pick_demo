@@ -5,6 +5,10 @@ built on the [Genesis](https://github.com/Genesis-Embodied-AI/Genesis) physics e
 Franka Panda picks fruit (banana / lemon / plum) off a table and places it into a bowl. The
 demo walks the full path from a hand-built scene to a trained, closed-loop visuomotor policy.
 
+> **Note**: This demo is intended purely to show beginners how to run simulation and training
+> on an AMD GPU using `genesis-world` and `lerobot`. It is a learning reference — the success
+> rate of the final trained model is **not guaranteed**.
+
 ## Pipeline (M1 -> M5)
 
 
@@ -47,6 +51,7 @@ step is required to run the demo.
 ```bash
 # 1. Install dependencies (physics engine + demo deps)
 #    Requires Python 3.12 (matches the ROCm torch wheels below).
+cd franka_fruit_pick_demo
 uv sync
 
 # 2. Install a policy backend for M5
@@ -74,17 +79,43 @@ uv run python franka_fruit_pick/build_scene.py --steps 50 --save-frames
 
 ### Run the pipeline
 
-```bash
-# M3 — record scripted episodes into a LeRobot dataset
-uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 011_banana --repo-id demo/banana_pick
+#### 1. Record data (M3)
 
-# (optional) merge per-object datasets into one training set
+Record scripted episodes into a per-object LeRobot dataset:
+
+```bash
+uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 011_banana --repo-id demo/banana_pick
+uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 014_lemon --repo-id demo/lemon_pick
+uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 018_plum --repo-id demo/plum_pick
+```
+
+Optionally record with **domain randomization** (M4) enabled:
+
+```bash
+uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 011_banana --repo-id demo/banana_pick_dr --dr-appearance --dr-object-color --dr-table-jitter 0.15 --dr-fov-jitter 2.0 --dr-rebuild-every 5 --dr-runtime --dr-friction 0.6 1.4 --dr-mass 0.8 1.2 --dr-cam-pos 0.01 --dr-cam-lookat 0.02
+```
+
+Optionally merge per-object datasets into one training set:
+
+```bash
 uv run python franka_fruit_pick/aggregate_datasets.py \
     --dataset-root datasets/banana_pick --dataset-root datasets/lemon_pick \
     --dataset-root datasets/plum_pick   --out datasets/fruit_pick
+```
 
-# M5 — train, then evaluate closed-loop / sweep checkpoints
+#### 2. Train (M5)
+
+Train a LeRobot policy on the recorded dataset:
+
+```bash
 uv run python franka_fruit_pick/train_policy.py smolvla --repo-id demo/fruit_pick --dataset-root datasets/fruit_pick
+```
+
+#### 3. Evaluate (M5)
+
+Run closed-loop evaluation, then sweep checkpoints:
+
+```bash
 uv run python franka_fruit_pick/eval_policy.py --run-dir <train-out> --repo-id demo/fruit_pick --episodes 50 --save-video
 uv run python franka_fruit_pick/eval_sweep.py  --run-dir <train-out> --repo-id demo/fruit_pick
 ```
@@ -101,8 +132,19 @@ writes new datasets here (`datasets/<repo-name>/`).
 
 ## Notes
 
-- **Rendering**: the default per-camera rasterizer works on any Genesis GPU backend
-(NVIDIA/CUDA, AMD/ROCm). `build_scene.py --batch-render` enables the Madrona batch
-renderer for all-envs-in-one-pass observation rendering, which is **NVIDIA-CUDA only**.
 - `**outputs/`** (eval results, videos, scripted-demo frames) is generated and gitignored.
+
+## Credits & asset sources
+
+The assets bundled under `assets/` are **not original to this repo**; they are sourced from
+the following projects and remain under their respective licenses:
+
+- **Franka Panda robot model** — from the [Genesis](https://github.com/Genesis-Embodied-AI/Genesis)
+  physics engine's bundled assets.
+- **YCB object meshes** (banana / lemon / plum / bowl / etc.) — from the
+  [ManiSkill](https://github.com/haosulab/ManiSkill) dataset, originally part of the
+  [YCB Object and Model Set](https://www.ycbbenchmarks.com/).
+
+Please refer to the upstream projects for their original licenses and citation requirements
+if you redistribute or build on these assets.
 
