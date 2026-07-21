@@ -27,16 +27,14 @@ demo walks the full path from a hand-built scene to a trained, closed-loop visuo
 franka_fruit_pick_demo/
   franka_fruit_pick/          # all pipeline code (import + run in place)
     paths.py                  # single source of truth for on-disk layout
-    scene_config.py  setup_assets.py  build_scene.py       # M1
-    randomize.py     grasp_demo.py                          # M2
-    record_dataset.py  aggregate_datasets.py                # M3 / M4 data
+    scene_config.py  setup_assets.py  build_scene.py       # M1 (+ M4 Layer-A DR)
+    randomize.py     grasp_demo.py                          # M2 (+ M4 Layer-B DR)
+    record_dataset.py  aggregate_datasets.py                # M3 data (can record M4-randomized data)
     train_policy.py  eval_policy.py  eval_sweep.py          # M5
     tools/                    # helper / debug / one-off utilities
       motion_probe.py         # scripted-motion quality diagnostics
       dr_preview.py           # domain-randomization visual preview
-      recheck_dataset.py      # re-validate a dataset vs the current success criterion
       scale_ycb.py            # bake scaled copies of YCB meshes (dev-only)
-      test_kitchen_table_scene.py  # standalone scene visual smoke test
   assets/                     # bundled meshes / robot model (see below)
   datasets/                   # recorded / aggregated LeRobot datasets
   outputs/                    # generated eval results, videos, frames (gitignored)
@@ -89,11 +87,20 @@ uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 014_lemon
 uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 018_plum --repo-id demo/plum_pick
 ```
 
+Sample frames recorded with basic setting:
+
+![Basic recording showcase](docs/no_dr_showcase.png)
+
+
 Optionally record with **domain randomization** (M4) enabled:
 
 ```bash
 uv run python franka_fruit_pick/record_dataset.py --episodes 50 --pick 011_banana --repo-id demo/banana_pick_dr --dr-appearance --dr-object-color --dr-table-jitter 0.15 --dr-fov-jitter 2.0 --dr-rebuild-every 5 --dr-runtime --dr-friction 0.6 1.4 --dr-mass 0.8 1.2 --dr-cam-pos 0.01 --dr-cam-lookat 0.02
 ```
+
+Sample frames recorded with domain randomization enabled:
+
+![Domain-randomized recording showcase](docs/dr_showcase.png)
 
 Optionally merge per-object datasets into one training set:
 
@@ -116,9 +123,16 @@ uv run python franka_fruit_pick/train_policy.py smolvla --repo-id demo/fruit_pic
 Run closed-loop evaluation, then sweep checkpoints:
 
 ```bash
-uv run python franka_fruit_pick/eval_policy.py --run-dir <train-out> --repo-id demo/fruit_pick --episodes 50 --save-video
-uv run python franka_fruit_pick/eval_sweep.py  --run-dir <train-out> --repo-id demo/fruit_pick
+# eval_policy.py takes --policy-path (a single checkpoint dir, containing config.json + model.safetensors)
+uv run python franka_fruit_pick/eval_policy.py --policy-path <train-out>/checkpoints/last/pretrained_model --repo-id demo/fruit_pick --dataset-root datasets/fruit_pick --episodes 50 --pick 011_banana 014_lemon 018_plum --save-video
+
+# eval_sweep.py takes --run-dir (the training run dir, containing checkpoints/) and evaluates every checkpoint
+uv run python franka_fruit_pick/eval_sweep.py  --run-dir <train-out> --repo-id demo/fruit_pick --dataset-root datasets/fruit_pick --pick 011_banana 014_lemon 018_plum
 ```
+
+Example closed-loop rollout of the trained policy:
+
+![Closed-loop fruit-pick rollout](docs/fruit_pick_demo.gif)
 
 ## Assets & datasets
 
