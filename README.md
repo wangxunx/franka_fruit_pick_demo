@@ -40,9 +40,6 @@ franka_fruit_pick_demo/
   outputs/                    # generated eval results, videos, frames (gitignored)
 ```
 
-All scripts use flat sibling imports and add the package directory to `sys.path`
-themselves, so you can run any of them directly from the repo root — no `pip install`
-step is required to run the demo.
 
 ## Quickstart
 
