@@ -14,11 +14,14 @@
 # at runtime so large assets/datasets/outputs stay out of the image, e.g.:
 #
 #   docker build -f docker/Dockerfile -t franka-fruit-pick:rocm7.2.1 .
-#   docker run --rm -it \
+#   docker run --rm -it --network=host \
 #       --device=/dev/kfd --device=/dev/dri \
 #       --group-add video --group-add render \
 #       --security-opt seccomp=unconfined \
+#       --cap-add=SYS_PTRACE \
+#       --ipc=host --shm-size=8g \
 #       -v "$PWD":/workspace/franka_fruit_pick_demo \
+#       -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
 #       franka-fruit-pick:rocm7.2.1
 # =============================================================================
 FROM rocm/dev-ubuntu-24.04:7.2.1-complete
